@@ -9,3 +9,15 @@ export const hasOwn = (target, key) =>
 export const hasChanged = function (oldVal, newVal) {
   return !Object.is(oldVal, newVal);
 };
+
+export const camalize = (str: string) => {
+  return str.replace(/-(\w)/g, (_, c) => (c ? c.toUpperCase() : ""));
+};
+
+export const capitalize = (str: string) => {
+  return str.charAt(0).toUpperCase() + str.slice(1);
+};
+
+export const toHandlerKey = (str: string) => {
+  return str ? "on" + capitalize(str) : "";
+};

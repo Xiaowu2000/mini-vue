@@ -30,7 +30,7 @@ function mountElement(vnode: any, container: any) {
   } else if (shapeFlag & ShapeFlags.ARRAY_CHILDREN) {
     mountChildren(children, el);
   }
-
+  
   for (const key in props) {
     const val = props[key];
     const isOn = (key: string) => /^on[A-Z]/.test(key);
