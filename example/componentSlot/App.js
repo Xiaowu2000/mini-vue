@@ -9,7 +9,10 @@ export const App = {
     const foo = h(
       Foo,
       {},
-      { header: h("p", {}, "123"), footer: h("p", {}, "234") }
+      {
+        header: ({ age }) => h("p", {}, "header" + age),
+        footer: () => h("p", {}, "footer"),
+      }
     );
 
     return h("div", {}, [app, foo]);
