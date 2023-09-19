@@ -9,11 +9,12 @@ export function createComponentInstance(vnode: any) {
     type: vnode.type,
     setupState: {},
     props: {},
-    emit:() => {},
+    emit: () => {},
   };
-  component.emit = emit.bind(null,component)
+  component.emit = emit.bind(null, component) as any;
   return component;
 }
+
 export function setupComponent(instance) {
   //TODO
   initProps(instance, instance.vnode.props);

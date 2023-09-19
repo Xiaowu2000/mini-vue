@@ -1,3 +1,3 @@
-export const initProps = function (instance,rawProps) {
-    instance.props = rawProps || {}
-};
+export function initProps(instance, rawProps) {
+  instance.props = rawProps || {};
+}

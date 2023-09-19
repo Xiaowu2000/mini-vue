@@ -8,13 +8,19 @@ export function render(vnode, container) {
 
 function patch(vnode, container) {
   //处理组件
-
-  const { shapeFlag } = vnode;
-  if (shapeFlag & ShapeFlags.STATEFUL_COMPONENT) {
+  if (isComponent(vnode)) {
     processComponent(vnode, container);
-  } else if (shapeFlag & ShapeFlags.ELEMENT) {
+  } else if (isElement(vnode)) {
     processElement(vnode, container);
   }
+}
+
+function isComponent(vnode) {
+  return vnode.shapeFlag & ShapeFlags.STATEFUL_COMPONENT;
+}
+
+function isElement(vnode) {
+  return vnode.shapeFlag & ShapeFlags.ELEMENT;
 }
 
 function processElement(vnode: any, container: any) {
@@ -30,7 +36,7 @@ function mountElement(vnode: any, container: any) {
   } else if (shapeFlag & ShapeFlags.ARRAY_CHILDREN) {
     mountChildren(children, el);
   }
-  
+
   for (const key in props) {
     const val = props[key];
     const isOn = (key: string) => /^on[A-Z]/.test(key);
@@ -45,6 +51,7 @@ function mountElement(vnode: any, container: any) {
 
   container.append(el);
 }
+
 function mountChildren(vnode, container) {
   vnode.forEach((v) => {
     patch(v, container);
@@ -56,14 +63,22 @@ function processComponent(vnode: any, container: any) {
 }
 
 function mountComponent(initialVNode: any, container) {
+  //createComponentInstance 就是把Vnode里面的数据处理
+  //vnode -> { {render(){...} , setup(){...} },props,children} 组件
+  //vnode -> {'div',props,children} element
+  //再用proxy代理，传给render去里面用this.去拿到
   const instance = createComponentInstance(initialVNode);
   setupComponent(instance);
-  setupRenderEffect(instance, initialVNode, container);
+  setupRenderEffect(instance, container);
 }
 
-function setupRenderEffect(instance: any, initialVNode, container) {
+function setupRenderEffect(instance: any, container) {
   const { proxy } = instance;
   const subTree = instance.render.call(proxy);
   patch(subTree, container);
-  initialVNode.el = subTree;
+    // subTree 就是 instance对应的node节点的render return的Vnode
+    // 目前来说每一个组件必有一个render且至少返回一个div
+    // subTree 被 patch 后 ,必然把渲染div的真实element挂在subTree的el下
+    // 这个div就是当前Instance对应的root Element
+  instance.vnode.el = subTree.el;
 }
