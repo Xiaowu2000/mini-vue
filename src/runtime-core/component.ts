@@ -33,12 +33,18 @@ function setupStatefulComponent(instance: any) {
 
   if (setup) {
     //setup  可以返回function或者Object
+    setCurrentInstance(instance);
     const setupResult = setup(shallowReadonly(instance.props), {
       emit: instance.emit,
     });
+    setCurrentInstance(null);
     handleSetupResult(instance, setupResult);
   }
 }
+function setCurrentInstance(instance: any) {
+  currentInstance = instance;
+}
+
 function handleSetupResult(instance, setupResult: any) {
   //TODO setup return function 情况
   if (typeof setupResult === "object") {
@@ -53,4 +59,8 @@ function finishComponentSetup(instance: any) {
   if (component.render) {
     instance.render = component.render;
   }
+}
+let currentInstance;
+export function getCurrentInstance() {
+  return currentInstance;
 }
