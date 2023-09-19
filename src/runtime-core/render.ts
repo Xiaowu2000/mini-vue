@@ -1,17 +1,28 @@
 import { isObject } from "../shared";
 import { ShapeFlags } from "../shared/ShapeFlags";
 import { createComponentInstance, setupComponent } from "./component";
+import { Fragment,Text } from "./vnode";
 
 export function render(vnode, container) {
   patch(vnode, container);
 }
 
 function patch(vnode, container) {
-  //处理组件
-  if (isComponent(vnode)) {
-    processComponent(vnode, container);
-  } else if (isElement(vnode)) {
-    processElement(vnode, container);
+  const { type } = vnode;
+  switch (type) {
+    case Fragment:
+      processFragment(vnode, container);
+      break;
+    case Text:
+      processText(vnode, container);
+      break;
+    default:
+      if (isComponent(vnode)) {
+        processComponent(vnode, container);
+      } else if (isElement(vnode)) {
+        processElement(vnode, container);
+      }
+      break;
   }
 }
 
@@ -52,8 +63,8 @@ function mountElement(vnode: any, container: any) {
   container.append(el);
 }
 
-function mountChildren(vnode, container) {
-  vnode.forEach((v) => {
+function mountChildren(children, container) {
+  children.forEach((v) => {
     patch(v, container);
   });
 }
@@ -69,16 +80,24 @@ function mountComponent(initialVNode: any, container) {
   //再用proxy代理，传给render去里面用this.去拿到
   const instance = createComponentInstance(initialVNode);
   setupComponent(instance);
-    setupRenderEffect(instance, container);
+  setupRenderEffect(instance, container);
 }
 
 function setupRenderEffect(instance: any, container) {
   const { proxy } = instance;
   const subTree = instance.render.call(proxy);
   patch(subTree, container);
-    // subTree 就是 instance对应的node节点的render return的Vnode
-    // 目前来说每一个组件必有一个render且至少返回一个div
-    // subTree 被 patch 后 ,必然把渲染div的真实element挂在subTree的el下
-    // 这个div就是当前Instance对应的root Element
+  // subTree 就是 instance对应的node节点的render return的Vnode
+  // 目前来说每一个组件必有一个render且至少返回一个div
+  // subTree 被 patch 后 ,必然把渲染div的真实element挂在subTree的el下
+  // 这个div就是当前Instance对应的root Element
   instance.vnode.el = subTree.el;
+}
+function processFragment(vnode, container) {
+  mountChildren(vnode.children, container);
+}
+function processText(vnode: any, container: any) {
+  const { children } = vnode;
+  const textNode = (vnode.el = document.createTextNode(children));
+  container.append(textNode);
 }
