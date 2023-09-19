@@ -69,7 +69,7 @@ function mountComponent(initialVNode: any, container) {
   //再用proxy代理，传给render去里面用this.去拿到
   const instance = createComponentInstance(initialVNode);
   setupComponent(instance);
-  setupRenderEffect(instance, container);
+    setupRenderEffect(instance, container);
 }
 
 function setupRenderEffect(instance: any, container) {
