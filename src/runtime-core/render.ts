@@ -1,26 +1,26 @@
 import { isObject } from "../shared";
 import { ShapeFlags } from "../shared/ShapeFlags";
 import { createComponentInstance, setupComponent } from "./component";
-import { Fragment,Text } from "./vnode";
+import { Fragment, Text } from "./vnode";
 
 export function render(vnode, container) {
-  patch(vnode, container);
+  patch(vnode, container,null);
 }
 
-function patch(vnode, container) {
+function patch(vnode, container, parentComponent) {
   const { type } = vnode;
   switch (type) {
     case Fragment:
-      processFragment(vnode, container);
+      processFragment(vnode, container, parentComponent);
       break;
     case Text:
       processText(vnode, container);
       break;
     default:
       if (isComponent(vnode)) {
-        processComponent(vnode, container);
+        processComponent(vnode, container, parentComponent);
       } else if (isElement(vnode)) {
-        processElement(vnode, container);
+        processElement(vnode, container, parentComponent);
       }
       break;
   }
@@ -34,19 +34,13 @@ function isElement(vnode) {
   return vnode.shapeFlag & ShapeFlags.ELEMENT;
 }
 
-function processElement(vnode: any, container: any) {
-  mountElement(vnode, container);
+function processElement(vnode: any, container: any, parentComponent) {
+  mountElement(vnode, container, parentComponent);
 }
 
-function mountElement(vnode: any, container: any) {
+function mountElement(vnode: any, container: any, parentComponent) {
   const { children, props, shapeFlag } = vnode;
   const el = (vnode.el = document.createElement(vnode.type as string));
-
-  if (shapeFlag & ShapeFlags.TEXT_CHILDREN) {
-    el.textContent = children;
-  } else if (shapeFlag & ShapeFlags.ARRAY_CHILDREN) {
-    mountChildren(children, el);
-  }
 
   for (const key in props) {
     const val = props[key];
@@ -60,25 +54,31 @@ function mountElement(vnode: any, container: any) {
     }
   }
 
+  if (shapeFlag & ShapeFlags.TEXT_CHILDREN) {
+    el.textContent = children;
+  } else if (shapeFlag & ShapeFlags.ARRAY_CHILDREN) {
+    mountChildren(children, el, parentComponent);
+  }
+
   container.append(el);
 }
 
-function mountChildren(children, container) {
+function mountChildren(children, container, parentComponent) {
   children.forEach((v) => {
-    patch(v, container);
+    patch(v, container, parentComponent);
   });
 }
 
-function processComponent(vnode: any, container: any) {
-  mountComponent(vnode, container);
+function processComponent(vnode: any, container: any, parentComponent) {
+  mountComponent(vnode, container, parentComponent);
 }
 
-function mountComponent(initialVNode: any, container) {
+function mountComponent(initialVNode: any, container, parentComponent) {
   //createComponentInstance 就是把Vnode里面的数据处理
   //vnode -> { {render(){...} , setup(){...} },props,children} 组件
   //vnode -> {'div',props,children} element
   //再用proxy代理，传给render去里面用this.去拿到
-  const instance = createComponentInstance(initialVNode);
+  const instance = createComponentInstance(initialVNode, parentComponent);
   setupComponent(instance);
   setupRenderEffect(instance, container);
 }
@@ -86,15 +86,15 @@ function mountComponent(initialVNode: any, container) {
 function setupRenderEffect(instance: any, container) {
   const { proxy } = instance;
   const subTree = instance.render.call(proxy);
-  patch(subTree, container);
+  patch(subTree, container, instance);
   // subTree 就是 instance对应的node节点的render return的Vnode
   // 目前来说每一个组件必有一个render且至少返回一个div
   // subTree 被 patch 后 ,必然把渲染div的真实element挂在subTree的el下
   // 这个div就是当前Instance对应的root Element
   instance.vnode.el = subTree.el;
 }
-function processFragment(vnode, container) {
-  mountChildren(vnode.children, container);
+function processFragment(vnode, container, parentComponent) {
+  mountChildren(vnode.children, container, parentComponent);
 }
 function processText(vnode: any, container: any) {
   const { children } = vnode;
