@@ -1,6 +1,5 @@
 function myInstanceof(obj, target) {
-  //需要判断obj为Object 或者 function(FUnction 也是 Obj)
-  if (!(obj !== null && ["function", "object"].includes(typeof obj))) {
+  if (obj === null || !["object", "function"].includes(typeof obj)) {
     return false;
   }
 
@@ -16,5 +15,4 @@ function myInstanceof(obj, target) {
 let a = [];
 console.log(myInstanceof(1, Array));
 console.log(myInstanceof(a, Array));
-
 console.log(myInstanceof(Function, Object));
