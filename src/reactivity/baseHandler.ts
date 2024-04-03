@@ -35,12 +35,14 @@ function createGetter(isReadonly = false, isShallow = false) {
       return res;
     }
 
-    if (isObject(res)) {
-      return isReadonly ? readonly(res) : reactive(res);
-    }
+
 
     if (!isReadonly) {
       track(target, key);
+    }
+    // 如果是对象，递归代理
+    if (isObject(res)) {
+      return isReadonly ? readonly(res) : reactive(res);
     }
     return res;
   };

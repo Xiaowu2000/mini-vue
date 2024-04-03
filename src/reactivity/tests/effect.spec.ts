@@ -14,6 +14,17 @@ describe("effect", () => {
     // //update
     user.age++;
     expect(nextAge).toBe(12);
+
+    // 4/3/2024 直接改变一个对象的属性，看看会不会触发effect 
+    let a0value
+    const a = reactive( [{ value: 1 }, { value: 2 }]);
+    effect(() => {
+      a0value = a[0].value;
+    });
+    expect(a0value).toBe(1);
+
+    a[0]={}
+    expect(a0value).toBe(undefined);
   });
 
   it("should return runner when call effect", () => {
@@ -80,14 +91,17 @@ describe("effect", () => {
     const obj = reactive({
       foo: 1,
     });
-    const onStop = jest.fn()
-    let dummy
-    const runner = effect(()=>{
-      dummy = obj.foo
-    },{
-      onStop
-    });
-    stop(runner)
-    expect(onStop).toBeCalledTimes(1)
+    const onStop = jest.fn();
+    let dummy;
+    const runner = effect(
+      () => {
+        dummy = obj.foo;
+      },
+      {
+        onStop,
+      }
+    );
+    stop(runner);
+    expect(onStop).toBeCalledTimes(1);
   });
 });
